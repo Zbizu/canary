@@ -2761,23 +2761,18 @@ void ProtocolGame::sendCreatureSkull(const Creature *creature)
 
 void ProtocolGame::sendCreatureType(const Creature *creature, uint8_t creatureType)
 {
-	NetworkMessage msg;
-	msg.addByte(0x95);
-	msg.add<uint32_t>(creature->getID());
-	if (creatureType == CREATURETYPE_SUMMON_OTHERS) {
-		creatureType = CREATURETYPE_SUMMON_PLAYER;
-	}
-	msg.addByte(creatureType); // type or any byte idk
-	if (creatureType == CREATURETYPE_SUMMON_PLAYER) {
-		const Creature* master = creature->getMaster();
-		if (master) {
-			msg.add<uint32_t>(master->getID());
-		} else {
-			msg.add<uint32_t>(0);
+		if (creature && !creature->isRemoved())
+		{
+			const Tile* tile = creature->getTile();
+			if (tile)
+			{
+				const Position& position = creature->getPosition();
+				int32_t stackpos = tile->getClientIndexOfCreature(player, creature);
+
+				sendUpdateTileCreature(position, stackpos, creature);
+			}
 		}
 	}
-
-	writeToOutputBuffer(msg);
 }
 
 void ProtocolGame::sendCreatureSquare(const Creature *creature, SquareColor_t color)
